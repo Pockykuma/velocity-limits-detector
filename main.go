@@ -37,11 +37,6 @@ type OutputLoad struct {
 	Accepted   bool `json:"accepted"`
 }
 
-// LoadSummary struct
-type LoadSummary struct {
-	total float64
-}
-
 func main() {
 	db, err = gorm.Open("sqlite3", "./MySQLite4.db")
 	if err != nil {
