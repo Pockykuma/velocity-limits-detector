@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pockykuma/velocity-limits-detector/models"
 )
 
 func main() {
@@ -13,5 +14,6 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"data": "hello world"})
 	})
 
+	models.ConnectDatabase()
 	r.Run()
 }
