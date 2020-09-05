@@ -128,8 +128,7 @@ func ValidateLoad(load Load, tx *gorm.DB) Load {
 		return load
 	}
 	// not use aggregation to save db call
-	tx.Where("accepted = true AND customer_id = ? AND time BETWEEN ? AND ?", load.CustomerID, time.Date(load.Time.Year(), load.Time.Month(), load.Time.Day(), 0, 0, 0, 0, load.Time.Location()),
-		time.Date(load.Time.Year(), load.Time.Month(), load.Time.Day()+1, 0, 0, 0, 0, load.Time.Location())).Find(&loads)
+	tx.Where("accepted = true AND customer_id = ? AND time BETWEEN ? AND ?", load.CustomerID, time.Date(load.Time.Year(), load.Time.Month(), load.Time.Day(), 0, 0, 0, 0, load.Time.Location()), load.Time).Find(&loads)
 	// rule 3: A maximum of 3 loads can be performed per day, regardless of amount
 	if len(loads) >= dailyMaxCount {
 		load.Accepted = false
@@ -147,10 +146,10 @@ func ValidateLoad(load Load, tx *gorm.DB) Load {
 		return load
 	}
 	// rule 2: A maximum of $20,000 can be loaded per week
-	var loadSummary LoadSummary
-	loadSummary.total = 0.0
-	tx.Table("loads").Select("sum(load_amount) as total").Where("accepted = true AND customer_id = ? AND time BETWEEN ? AND ?", load.CustomerID, GetMonday(load.Time), GetNextMonday(load.Time)).Group("customer_id").First(&loadSummary)
-	if loadSummary.total+load.LoadAmount > weeklyMaxAmount {
+	var total float64
+	row := tx.Table("loads").Select("sum(load_amount) as total").Where("accepted = true AND customer_id = ? AND time BETWEEN ? AND ?", load.CustomerID, GetMonday(load.Time), load.Time).Group("customer_id").Row()
+	row.Scan(&total)
+	if total+load.LoadAmount > weeklyMaxAmount {
 		load.Accepted = false
 
 		return load
@@ -170,10 +169,4 @@ func GetMonday(givenTime time.Time) time.Time {
 	}
 
 	return time.Date(givenTime.Year(), givenTime.Month(), givenTime.Day(), 0, 0, 0, 0, time.Local).AddDate(0, 0, offset)
-}
-
-// GetNextMonday is to get next monday date by a givenTime
-func GetNextMonday(givenTime time.Time) time.Time {
-
-	return GetMonday(givenTime).AddDate(0, 0, 7)
 }
