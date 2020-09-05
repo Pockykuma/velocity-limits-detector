@@ -46,13 +46,13 @@ func main() {
 	db.AutoMigrate(&Load{})
 	r := gin.Default()
 
-	r.POST("/", GenerateOutputFile)
+	r.POST("/validateLoads", ValidateLoads)
 
 	r.Run()
 }
 
-// GenerateOutputFile is to generate a output.txt from input.txt
-func GenerateOutputFile(c *gin.Context) {
+// ValidateLoads is to validate loads and generate a newOutput.txt file from input.txt
+func ValidateLoads(c *gin.Context) {
 	var writeData string
 	//use transcation
 	tx := db.Begin()
@@ -93,7 +93,7 @@ func GenerateOutputFile(c *gin.Context) {
 		log.Fatal(err)
 	}
 	//write to a text file
-	writefile, err := os.Create("./output111.txt")
+	writefile, err := os.Create("./newOutput.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -131,20 +131,20 @@ func ValidateLoad(load Load, tx *gorm.DB) Load {
 		return load
 	}
 	// rule 1: A maximum of $5,000 can be loaded per day
-	sum := load.LoadAmount
+	dailyTotal := load.LoadAmount
 	for i := 0; i < len(loads); i++ {
-		sum += loads[i].LoadAmount
+		dailyTotal += loads[i].LoadAmount
 	}
-	if sum > dailyMaxAmount {
+	if dailyTotal > dailyMaxAmount {
 		load.Accepted = false
 
 		return load
 	}
 	// rule 2: A maximum of $20,000 can be loaded per week
-	var total float64
+	var weeklyTotal float64
 	row := tx.Table("loads").Select("sum(load_amount) as total").Where("accepted = true AND customer_id = ? AND time BETWEEN ? AND ?", load.CustomerID, GetMonday(load.Time), load.Time).Group("customer_id").Row()
-	row.Scan(&total)
-	if total+load.LoadAmount > weeklyMaxAmount {
+	row.Scan(&weeklyTotal)
+	if weeklyTotal+load.LoadAmount > weeklyMaxAmount {
 		load.Accepted = false
 
 		return load
