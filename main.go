@@ -38,17 +38,26 @@ type OutputLoad struct {
 }
 
 func main() {
-	db, err = gorm.Open("sqlite3", "./MySQLite4.db")
+	SetupServer().Run()
+	defer db.Close()
+}
+
+// SetupServer is to initialize the server
+func SetupServer() *gin.Engine {
+	Connect()
+	r := gin.Default()
+	r.GET("/validateLoads", ValidateLoads)
+
+	return r
+}
+
+// Connect is to connect the database and migrate model
+func Connect() {
+	db, err = gorm.Open("sqlite3", "./MySQLite.db")
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer db.Close()
 	db.AutoMigrate(&Load{})
-	r := gin.Default()
-
-	r.POST("/validateLoads", ValidateLoads)
-
-	r.Run()
 }
 
 // ValidateLoads is to validate loads and generate a newOutput.txt file from input.txt
@@ -93,22 +102,29 @@ func ValidateLoads(c *gin.Context) {
 		log.Fatal(err)
 	}
 	//write to a text file
+	writeToFile(writeData)
+
+	c.JSON(200, writeData)
+}
+
+// writeToFileis to write text to newOutput.txt on root directory
+func writeToFile(text string) {
 	writefile, err := os.Create("./newOutput.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer writefile.Close()
 
-	_, err = io.WriteString(writefile, writeData)
+	_, err = io.WriteString(writefile, text)
 	if err != nil {
 		fmt.Println(err)
 	}
 	writefile.Sync()
 
-	c.JSON(200, "done")
+	return
 }
 
-// ValidateLoad will validate the load agast the rules
+// ValidateLoad will validate a single load agast the rules
 func ValidateLoad(load Load, tx *gorm.DB) Load {
 	dailyMaxAmount := 5000.0
 	weeklyMaxAmount := 20000.0
