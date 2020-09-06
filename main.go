@@ -46,7 +46,7 @@ func main() {
 func SetupServer() *gin.Engine {
 	Connect()
 	r := gin.Default()
-	r.GET("/validateLoads", ValidateLoads)
+	r.GET("/validateLoads/:fileName", ValidateLoads)
 
 	return r
 }
@@ -60,14 +60,14 @@ func Connect() {
 	db.AutoMigrate(&Load{})
 }
 
-// ValidateLoads is to validate loads and generate a newOutput.txt file from input.txt
+// ValidateLoads is to validate loads and generate a newOutput.txt file from input file
 func ValidateLoads(c *gin.Context) {
 	var writeData string
 	//use transcation
 	tx := db.Begin()
 	// clear the db
 	tx.Model(&Load{}).Delete(&Load{})
-	readFile, err := os.Open("./input.txt")
+	readFile, err := os.Open("./" + c.Param("fileName"))
 	if err != nil {
 		log.Fatal(err)
 	}

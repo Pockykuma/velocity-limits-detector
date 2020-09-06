@@ -18,7 +18,7 @@ func TestValidateLoadsRoute(t *testing.T) {
 
 	// Make a request to our server with the validateLoads
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/validateLoads", nil)
+	req, _ := http.NewRequest("GET", "/validateLoads/testInput.txt", nil)
 	router.ServeHTTP(w, req)
 
 	expected := ""
