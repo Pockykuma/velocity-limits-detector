@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -46,7 +47,8 @@ func main() {
 func SetupServer() *gin.Engine {
 	Connect()
 	r := gin.Default()
-	r.GET("/validateLoads/:fileName", ValidateLoads)
+	r.Use(cors.Default())
+	r.POST("/validateLoads", ValidateLoads)
 
 	return r
 }
@@ -67,13 +69,11 @@ func ValidateLoads(c *gin.Context) {
 	tx := db.Begin()
 	// clear the db
 	tx.Model(&Load{}).Delete(&Load{})
-	readFile, err := os.Open("./" + c.Param("fileName"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer readFile.Close()
+	file, _, _ := c.Request.FormFile("file")
+
+	defer file.Close()
 	// read from text file line by line
-	scanner := bufio.NewScanner(readFile)
+	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		// load json to strct
 		var load Load
