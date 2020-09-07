@@ -62,7 +62,7 @@ func Connect() {
 	db.AutoMigrate(&Load{})
 }
 
-// ValidateLoads is to validate loads and generate a newOutput.txt file from input file
+// ValidateLoads is to validate loads and generate a text file from input file
 func ValidateLoads(c *gin.Context) {
 	var writeData string
 	//use transcation
@@ -114,9 +114,9 @@ func ValidateLoads(c *gin.Context) {
 	c.JSON(200, writeData)
 }
 
-// writeToFileis to write text to newOutput.txt on root directory
+// writeToFileis to write a text file root directory
 func writeToFile(text string) {
-	writefile, err := os.Create("./newOutput.txt")
+	writefile, err := os.Create("./output-" + time.Now().Format("2006-01-02 15:04:05") + ".txt")
 	if err != nil {
 		fmt.Println(err)
 	}
