@@ -79,6 +79,13 @@ func ValidateLoads(c *gin.Context) {
 		var load Load
 		// remove $ sign
 		json.Unmarshal([]byte(strings.Replace(scanner.Text(), "$", "", -1)), &load)
+		// handle wrong format file
+		if load.Time.IsZero() {
+			//end transcation
+			tx.Commit()
+			c.JSON(400, "Wrong format file.")
+			return
+		}
 		//validate current load
 		modifiedLoad := ValidateLoad(load, tx)
 		if err := tx.Create(&modifiedLoad).Error; err != nil {

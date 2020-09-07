@@ -34,7 +34,7 @@ export default class FileInput extends React.Component<{}, { output: string }> {
         }
       } catch (error) {
         this.setState({
-          output: 'Worng format file.',
+          output: 'Wrong format file.',
         })
       }
     }
